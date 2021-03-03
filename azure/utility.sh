@@ -22,7 +22,19 @@ function az_get_storage_connection_string(){
     ${args[@]/#/--} | jq '.["connectionString"]' || return $?
 }
 
-function az_check_blob_container_access() {
+function az_get_vaultitem_id(){
+  local vaultName="$1"; shift
+  local itemName="$1"; shift
+  local type="${1:-secret}"; shift
+
+  # query the vaultitem URL to get the complete Id (contains unknown string)
+  # a query can be made on only the name, but a deletion requires the full id
+  # the unknown string is the "Version" of the item
+  local url="https://${vaultName}.vault.azure.net/${type}s/${itemName}"
+  az keyvault ${type} show --id "${url}" | jq -r '.id' || return $?
+}
+
+function az_check_blob_container_access() { 
   local storageAccountName="$1"; shift
   local containerName="$1"; shift
 
@@ -212,25 +224,27 @@ function az_add_secret() {
   fi
 }
 
-function az_check_secret() {
+function az_check_vaultitem() {
   local vaultName="$1"; shift
-  local secretName="$1"; shift
+  local itemName="$1"; shift
+  local type="${1:-secret}"; shift
 
-  local secretId="https://${vaultName}.vault.azure.net/secrets/${secretName}"
+  local itemId="https://${vaultName}.vault.azure.net/${type}s/${itemName}"
 
-  az keyvault secret show --id "${secretId}" 2>&1 > /dev/null
+  az keyvault ${type} show --id "${itemId}" 2>&1 > /dev/null
 }
 
-function az_delete_secret() {
+function az_delete_vaultitem() {
   local vaultName="$1"; shift
-  local keyName="$1"; shift
+  local itemName="$1"; shift
+  local type="${1:-secret}"; shift
 
-  local keyId="https://${vaultName}.vault.azure.net/keys/${keyName}"
-
-  #azure returns a large object upon successful deletion, so we redirect that.
-  az keyvault key show --id "${keyId}" 2>&1 > /dev/null && \
-  { az keyvault secret delete --id "${keyId}" > /dev/null || return $?; }
-
+  local itemId=$(az_get_vaultitem_id ${vaultName} ${itemName} "${type}")
+  { az keyvault ${type} delete --id "${itemId}" --only-show-errors > /dev/null || return $?; }
+  # must purge deleted secrets/keys or you cannot reuse the name
+  # deleted items have a new namespace under "deleted<type>"
+  local itemId=$(az_get_vaultitem_id ${vaultName} ${itemName} "deleted${type}")
+  { az keyvault ${type} purge --id "${itemId}" --only-show-errors > /dev/null || return $?; }
   return 0
 }
 

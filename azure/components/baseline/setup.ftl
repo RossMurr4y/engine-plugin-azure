@@ -237,7 +237,7 @@
                       "\"" + accountObject.Id + "\" || return $?",
                   "  #",
                   "  # Upload to keyvault if required.",
-                  "  AZ_CHK_SECRET=$(az_check_secret" + " " +
+                  "  AZ_CHK_SECRET=$(az_check_vaultitem" + " " +
                       "\"" + keyvault.Name + "\" " +
                       "\"" + vmKeyPair.Name + "PublicKey" + "\")",
                   "  if [[ $\{AZ_CHK_SECRET} " +
@@ -253,7 +253,7 @@
                             "\"" + vmKeyPair.Name + "PublicKey" + "\" " +
                             "\"$\{pem_file}\"",
                   "  fi",
-                  "  AZ_CHK_SECRET=$(az_check_secret" + " " +
+                  "  AZ_CHK_SECRET=$(az_check_vaultitem" + " " +
                   "\"" + keyvault.Name + "\" " +
                   "\"" + vmKeyPair.Name + "PrivateKey" + "\")",
                   "  if [[ $\{AZ_CHK_SECRET} " +
@@ -280,17 +280,17 @@
                   "#",
                   "case $\{DEPLOYMENT_OPERATION} in",
                   "  delete)",
-                  "  AZ_CHK_SECRET=$(az_check_secret" + " " +
+                  "  AZ_CHK_SECRET=$(az_check_vaultitem" + " " +
                   "\"" + keyvault.Name + "\" " +
                   "\"" + vmKeyPair.Name + "PublicKey" + "\")",
-                  "  if [[ ! $($\{AZ_CHK_SECRET} = *NotFound* ) ]]; then",
-                  "    az_delete_secret \"" + keyvault.Name + "\" \"" + vmKeyPair.Name + "PublicKey" + "\"",
+                  "  if [[ ! $\{AZ_CHK_SECRET} = *NotFound* ]]; then",
+                  "    az_delete_vaultitem \"" + keyvault.Name + "\" \"" + vmKeyPair.Name + "PublicKey" + "\"",
                   "  fi",
-                  "  AZ_CHK_SECRET=$(az_check_secret" + " " +
+                  "  AZ_CHK_SECRET=$(az_check_vaultitem" + " " +
                   "\"" + keyvault.Name + "\" " +
                   "\"" + vmKeyPair.Name + "PrivateKey" + "\")",
-                  "  if [[ ! $($\{AZ_CHK_SECRET} = *NotFound* ) ]]; then",
-                  "    az_delete_secret \"" + keyvault.Name + "\" \"" + vmKeyPair.Name + "PrivateKey" + "\"",
+                  "  if [[ ! $\{AZ_CHK_SECRET} = *NotFound* ]]; then",
+                  "    az_delete_vaultitem \"" + keyvault.Name + "\" \"" + vmKeyPair.Name + "PrivateKey" + "\"",
                   "  fi",
                   "    ;;",
                   "  create|update)",
