@@ -51,9 +51,7 @@ function az_copy_from_blob(){
   local fileName="$1"; shift
   local resourceGroup="$1"; shift
 
-  DEFAULT_RESOURCE_GROUP=""
-
-  connectionString=$(az_get_storage_connection_string "${storageAccountName}" "${resourceGroup:DEFAULT_RESOURCE_GROUP}")
+  connectionString=$(az_get_storage_connection_string "${storageAccountName}")
 
   az storage blob download \
     --connection-string "${connectionString}" \
